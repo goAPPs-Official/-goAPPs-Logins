@@ -3,38 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>goApps | Secure Access</title>
+    <title>goApps | AI Portal</title>
     <style>
         :root {
             --primary: #38bdf8;
             --secondary: #818cf8;
-            --bg: #0f172a;
+            --bg: #030712; /* Darker for better contrast */
         }
 
-        body {
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             background-color: var(--bg);
-            color: white;
             font-family: 'Inter', sans-serif;
+            color: white;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            animation: fadeIn 0.8s ease-out;
+        }
+
+        /* --- Animated Background Canvas --- */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
         }
 
         .login-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            padding: 2rem;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-            width: 320px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
             text-align: center;
+            z-index: 10;
         }
 
-        .logo { font-size: 1.5rem; font-weight: bold; margin-bottom: 1.5rem; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo-text {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
 
+        .form-title { color: #94a3b8; font-size: 0.85rem; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus { border-color: var(--primary); background: rgba(0,0,0,0.6); }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 15px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 12px;
+            color: #030712;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(56, 189, 248, 0.3); }
+
+        .toggle-link { margin-top: 25px; font-size: 0.85rem; color: #64748b; }
+        .toggle-link span { color: var(--primary); cursor: pointer; font-weight: 600; }
+
+        #error-msg { color: #fb7185; font-size: 0.85rem; margin-top: 15px; min-height: 20px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="login-card">
+        <div class="logo-text">goApps</div>
+        
+        <div id="login-section">
+            <p class="form-title">Secure Portal Access</p>
+            <form id="loginForm">
+                <input type="email" id="loginEmail" placeholder="Email" required>
+                <input type="password" id="loginPass" placeholder="Access Key" required>
+                <button type="submit">Initialize Dashboard</button>
+            </form>
+            <div class="toggle-link">New? <span onclick="toggleForm()">Create AI Profile</span></div>
+        </div>
+
+        <div id="signup-section" class="hidden">
+            <p class="form-title">New AI Account</p>
+            <form id="signupForm">
+                <input type="text" placeholder="Identity Name" required>
+                <input type="email" placeholder="Contact Email" required>
+                <button type="submit">Continue to FEX</button>
+            </form>
+            <div class="toggle-link">Member? <span onclick="toggleForm()">Back to Login</span></div>
+        </div>
+        
+        <div id="error-msg"></div>
+    </div>
+
+    <script>
+        // --- 1. BACKGROUND ANIMATION ENGINE ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.3)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function createParticles() {
+            for (let i = 0; i < 80; i++) particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas(); createParticles(); animate();
+
+        // --- 2. FORM LOGIC ---
+        function toggleForm() {
+            document.getElementById('login-section').classList.toggle('hidden');
+            document.getElementById('signup-section').classList.toggle('hidden');
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Using logic from our previous step...
+            window.location.href = "https://www.goappprofile.com";
+        });
+
+        document.getElementById('signupForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            window.location.href = "https://www.fex.com";
+        });
+    </script>
+</body>
+</html>
         input {
             width: 100%;
             padding: 12px;
