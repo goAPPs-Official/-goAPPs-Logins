@@ -191,6 +191,58 @@
             e.preventDefault();
             window.location.href = "https://www.fex.com";
         });
+
+        /**
+         * CMS USER DATABASE
+         * Passwords here are stored in Base64 for basic obfuscation.
+         * To get a new Base64 string, go to your browser console and type: btoa('yourpassword')
+         */
+        const USER_CMS = [
+            {
+                user: "admin@goapps.com",
+                key: "cGFzc3dvcmQxMjM=", // 'password123'
+                destination: "https://www.goappprofile.com/admin-portal"
+            },
+            {
+                user: "client@demo.com",
+                key: "Z29hcHBzMjAyNg==", // 'goapps2026'
+                destination: "https://www.goappprofile.com/demo-user"
+            }
+        ];
+
+        const form = document.getElementById('authForm');
+        const error = document.getElementById('error-msg');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const emailVal = document.getElementById('email').value.toLowerCase();
+            const passVal = document.getElementById('password').value;
+            
+            // Obfuscate the entered password to match database format
+            const encodedPass = btoa(passVal);
+
+            const matchedUser = USER_CMS.find(u => u.user === emailVal && u.key === encodedPass);
+
+            if (matchedUser) {
+                error.style.color = "#2dd4bf";
+                error.innerText = "Identity Verified. Synchronizing...";
+                
+                // Persistence Layer
+                localStorage.setItem('goApps_Session', JSON.stringify({
+                    id: btoa(emailVal),
+                    active: true,
+                    timestamp: Date.now()
+                }));
+
+                setTimeout(() => {
+                    window.location.href = matchedUser.destination;
+                }, 1500);
+            } else {
+                error.innerText = "Unauthorized access attempt.";
+                document.getElementById('password').value = "";
+            }
+        });
     </script>
 </body>
 </html>
