@@ -3,176 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>goApps | Login</title>
+    <title>goApps | Secure Access</title>
     <style>
         :root {
             --primary: #38bdf8;
             --secondary: #818cf8;
             --bg: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.7);
         }
 
         body {
-            margin: 0;
-            padding: 0;
             background-color: var(--bg);
-            background-image: radial-gradient(circle at top right, rgba(129, 140, 248, 0.1), transparent),
-                              radial-gradient(circle at bottom left, rgba(56, 189, 248, 0.1), transparent);
+            color: white;
+            font-family: 'Inter', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            color: white;
-            overflow: hidden;
-            /* Fade-in animation to catch the transition from splash */
-            animation: fadeIn 1s ease-out;
+            margin: 0;
+            animation: fadeIn 0.8s ease-out;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Glassmorphism Login Card */
         .login-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            padding: 40px;
-            border-radius: 24px;
-            width: 100%;
-            max-width: 400px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            width: 320px;
             text-align: center;
         }
 
-        .logo {
-            font-size: 2rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .subtitle {
-            font-size: 0.9rem;
-            color: #94a3b8;
-            margin-bottom: 32px;
-        }
-
-        .form-group {
-            text-align: left;
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.85rem;
-            margin-bottom: 8px;
-            color: #cbd5e1;
-            font-weight: 500;
-        }
+        .logo { font-size: 1.5rem; font-weight: bold; margin-bottom: 1.5rem; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
         input {
             width: 100%;
-            padding: 12px 16px;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            padding: 12px;
+            margin: 8px 0;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
             color: white;
-            font-size: 1rem;
             box-sizing: border-box;
-            transition: all 0.3s ease;
         }
 
-        input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
-        }
-
-        .btn-login {
+        button {
             width: 100%;
-            padding: 14px;
-            margin-top: 10px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            padding: 12px;
+            margin-top: 15px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             border: none;
-            border-radius: 12px;
+            border-radius: 8px;
             color: #0f172a;
-            font-weight: 700;
-            font-size: 1rem;
+            font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -5px rgba(56, 189, 248, 0.4);
-        }
-
-        .btn-login:active {
-            transform: translateY(0);
-        }
-
-        .footer-links {
-            margin-top: 24px;
-            font-size: 0.85rem;
-            color: #94a3b8;
-        }
-
-        .footer-links a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .footer-links a:hover {
-            text-decoration: underline;
-        }
+        #message { color: #f87171; font-size: 0.8rem; margin-top: 10px; min-height: 1em; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div class="login-card">
-        <div class="logo">goApps</div>
-        <div class="subtitle">Access your AI Assistant Hub</div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" placeholder="name@company.com" required>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" placeholder="••••••••" required>
-            </div>
-
-            <button type="submit" class="btn-login">Sign In</button>
+        <div class="logo">goApps Login</div>
+        <form id="cmsLogin">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Initialize Session</button>
         </form>
-
-        <div class="footer-links">
-            Don't have an account? <a href="#">Request Access</a>
-        </div>
+        <div id="message"></div>
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        // --- THE "CMS" DATABASE (MAPPING) ---
+        // You can add more users and their specific redirect URLs here.
+        const userDatabase = [
+            {
+                email: "admin@goapps.com",
+                password: "password123",
+                redirect: "https://www.goappprofile.com/admin"
+            },
+            {
+                email: "user@goapps.com",
+                password: "user456",
+                redirect: "https://www.goappprofile.com/dashboard"
+            }
+        ];
+
+        const loginForm = document.getElementById('cmsLogin');
+        const message = document.getElementById('message');
+
+        loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            // Here you would normally validate credentials.
-            // For now, we simulate a successful login and redirect.
-            
-            const btn = document.querySelector('.btn-login');
-            btn.innerText = "Authenticating...";
-            btn.style.opacity = "0.7";
-            btn.style.pointerEvents = "none";
+            const emailInput = document.getElementById('email').value;
+            const passInput = document.getElementById('password').value;
 
-            setTimeout(() => {
-                window.location.href = "https://goapps-official.github.io/My-Profile/";
-            }, 1200);
+            // Find user in our "database"
+            const user = userDatabase.find(u => u.email === emailInput && u.password === passInput);
+
+            if (user) {
+                message.style.color = "#4ade80";
+                message.innerText = "Access Granted. Redirecting...";
+                
+                // --- PERSISTENCE ---
+                // Storing login status in LocalStorage so the profile page 
+                // knows who logged in.
+                localStorage.setItem('goApps_User', JSON.stringify({
+                    email: user.email,
+                    loginTime: new Date().toISOString()
+                }));
+
+                // --- DYNAMIC REDIRECT ---
+                setTimeout(() => {
+                    window.location.href = user.redirect;
+                }, 1000);
+
+            } else {
+                message.innerText = "Invalid credentials. Please try again.";
+            }
         });
     </script>
 </body>
