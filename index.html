@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>goApps | AI Portal</title>
+    <title>goApps | AI Assistant Platform</title>
     <style>
         :root {
             --primary: #38bdf8;
             --secondary: #818cf8;
-            --bg: #030712; /* Darker for better contrast */
+            --bg: #030712;
+            --card-bg: rgba(15, 23, 42, 0.9);
         }
 
         body, html {
@@ -17,7 +18,7 @@
             width: 100%;
             height: 100%;
             background-color: var(--bg);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             color: white;
             overflow: hidden;
             display: flex;
@@ -25,16 +26,234 @@
             align-items: center;
         }
 
-        /* --- Animated Background Canvas --- */
+        /* --- BACKGROUND CANVAS --- */
         #bg-canvas {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
         }
 
+        /* --- SPLASH SCREEN OVERLAY --- */
+        #splash-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .splash-logo {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .loader-bar {
+            width: 200px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .loader-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+            transition: width 0.2s;
+        }
+
+        /* --- LOGIN CARD --- */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+        }
+
+        .main-container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 350px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: white;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 12px;
+            color: #030712;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
+
+        .toggle-txt { margin-top: 20px; font-size: 0.85rem; color: #94a3b8; }
+        .toggle-txt span { color: var(--primary); cursor: pointer; font-weight: bold; }
+
+        .hidden { display: none; }
+        .fade-out { opacity: 0; pointer-events: none; transform: scale(1.1); }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div id="splash-overlay">
+        <div class="splash-logo">goApps</div>
+        <div class="loader-bar"><div class="loader-fill" id="loaderFill"></div></div>
+        <p id="splash-status" style="font-size: 0.7rem; margin-top: 10px; letter-spacing: 2px; opacity: 0.5;">INITIALIZING AI CORE...</p>
+    </div>
+
+    <div class="main-container" id="mainUI">
+        <div class="card">
+            <div class="logo-text">goApps</div>
+            
+            <div id="login-view">
+                <form id="loginForm">
+                    <input type="email" id="email" placeholder="Client Email" required>
+                    <input type="password" id="pass" placeholder="Access Key" required>
+                    <button type="submit">Unlock Dashboard</button>
+                </form>
+                <div class="toggle-txt">New user? <span onclick="toggleMode()">Create Profile</span></div>
+            </div>
+
+            <div id="signup-view" class="hidden">
+                <form id="signupForm">
+                    <input type="text" placeholder="Full Name" required>
+                    <input type="email" placeholder="Email Address" required>
+                    <button type="submit">Join via FEX</button>
+                </form>
+                <div class="toggle-txt">Have account? <span onclick="toggleMode()">Sign In</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CMS CONFIG (LOCAL DATABASE) ---
+        const USER_DB = [
+            { user: "admin@goapps.com", key: btoa("pass123"), target: "https://www.goappprofile.com/admin" }
+        ];
+
+        // --- 1. PARTICLE BACKGROUND LOGIC ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function init() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<70; i++) particles.push({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5
+            });
+        }
+        function draw() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = "rgba(56, 189, 248, 0.2)";
+            particles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                ctx.beginPath(); ctx.arc(p.x, p.y, 1.5, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(draw);
+        }
+        init(); draw();
+
+        // --- 2. SPLASH SCREEN LOGIC ---
+        let progress = 0;
+        const loader = document.getElementById('loaderFill');
+        const splash = document.getElementById('splash-overlay');
+        const mainUI = document.getElementById('mainUI');
+
+        const loadInt = setInterval(() => {
+            progress += Math.random() * 15;
+            if(progress >= 100) {
+                progress = 100;
+                clearInterval(loadInt);
+                setTimeout(() => {
+                    splash.classList.add('fade-out');
+                    mainUI.classList.add('visible');
+                }, 500);
+            }
+            loader.style.width = progress + "%";
+        }, 200);
+
+        // --- 3. FORM & CMS LOGIC ---
+        function toggleMode() {
+            document.getElementById('login-view').classList.toggle('hidden');
+            document.getElementById('signup-view').classList.toggle('hidden');
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const u = document.getElementById('email').value.toLowerCase();
+            const p = btoa(document.getElementById('pass').value);
+            const found = USER_DB.find(x => x.user === u && x.key === p);
+            
+            if(found) {
+                localStorage.setItem('goApps_Session', u);
+                window.location.href = found.target;
+            } else {
+                alert("Unauthorized Access.");
+            }
+        });
+
+        document.getElementById('signupForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            window.location.href = "https://www.fex.com";
+        });
+    </script>
+</body>
+</html>
         .login-card {
             background: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(20px);
