@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>goApps|🔐Secure Terminal</title>
+    <title>goApps|🔐Secure Terminal v3</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #38bdf8;
-            --secondary: #818cf8;
-            --bg: #030712;
-            --card-bg: rgba(15, 23, 42, 0.9);
-            --success: #2dd4bf;
-            --border: rgba(255, 255, 255, 0.1);
+            --primary: #38bdf8; --secondary: #818cf8; --bg: #030712;
+            --card-bg: rgba(15, 23, 42, 0.9); --success: #2dd4bf;
+            --border: rgba(255, 255, 255, 0.1); --danger: #ef4444;
         }
 
         body, html {
@@ -21,52 +18,61 @@
             color: white; overflow: hidden; display: flex; justify-content: center; align-items: center;
         }
 
-        /* Backgrounds */
-        #bg-canvas { position: fixed; inset: 0; z-index: 1; }
-        #enc-canvas { position: fixed; inset: 0; z-index: 5; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+        /* Background Layers */
+        #bg-canvas, #enc-canvas { position: fixed; inset: 0; }
+        #bg-canvas { z-index: 1; }
+        #enc-canvas { z-index: 5; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
 
-        /* UI Container */
-        .main-container { position: relative; z-index: 10; width: 380px; transition: transform 0.3s ease; }
+        /* Main UI */
+        .main-container { position: relative; z-index: 10; width: 380px; }
         .card {
             background: var(--card-bg); backdrop-filter: blur(20px);
             padding: 2rem; border-radius: 32px; border: 1px solid var(--border);
-            text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            position: relative; overflow: hidden;
         }
 
-        /* Minimalist Slider */
-        .slider-container { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; justify-content: center; }
-        .min-slider { -webkit-appearance: none; width: 80px; height: 4px; background: var(--border); border-radius: 5px; outline: none; }
-        .min-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--primary); border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px var(--primary); }
+        /* Lockout Overlay */
+        #lockout-screen {
+            position: absolute; inset: 0; background: rgba(239, 68, 68, 0.1);
+            backdrop-filter: blur(10px); display: none; z-index: 50;
+            flex-direction: column; justify-content: center; align-items: center;
+        }
 
-        .logo-text { font-size: 1.8rem; font-weight: 800; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+        /* Slider */
+        .slider-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; justify-content: center; }
+        .min-slider { -webkit-appearance: none; width: 60px; height: 3px; background: var(--border); border-radius: 5px; outline: none; }
+        .min-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; background: var(--primary); border-radius: 50%; cursor: pointer; }
 
-        /* Accordion & Inputs */
+        .logo-text { font-size: 1.8rem; font-weight: 800; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1.2rem; }
+
+        /* Accordion */
         .auth-option { margin-bottom: 10px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); transition: 0.3s; background: rgba(255,255,255,0.02); }
-        .auth-header { width: 100%; padding: 16px; background: none; border: none; color: white; display: flex; align-items: center; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+        .auth-header { width: 100%; padding: 15px; background: none; border: none; color: white; display: flex; align-items: center; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
         .auth-header span { margin-right: 12px; font-size: 1.2rem; }
-        .auth-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; padding: 0 16px; }
+        .auth-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; padding: 0 15px; }
         .auth-option.active { border-color: var(--primary); background: rgba(56, 189, 248, 0.05); }
-        .auth-option.active .auth-content { max-height: 250px; padding-bottom: 16px; }
+        .auth-option.active .auth-content { max-height: 350px; padding-bottom: 15px; }
 
-        input { width: 100%; padding: 12px; margin: 6px 0; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 10px; color: white; outline: none; }
+        input { width: 100%; padding: 12px; margin: 6px 0; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 10px; color: white; outline: none; box-sizing: border-box; }
         input:focus { border-color: var(--primary); }
         
-        .submit-btn { width: 100%; padding: 14px; background: linear-gradient(90deg, var(--primary), var(--secondary)); border: none; border-radius: 10px; color: #030712; font-weight: 800; cursor: pointer; margin-top: 10px; font-size: 0.75rem; letter-spacing: 1px; }
+        .submit-btn { width: 100%; padding: 12px; background: linear-gradient(90deg, var(--primary), var(--secondary)); border: none; border-radius: 10px; color: #030712; font-weight: 800; cursor: pointer; margin-top: 8px; font-size: 0.75rem; letter-spacing: 1px; }
+
+        /* QR Scanner */
+        .qr-box { background: white; padding: 10px; border-radius: 12px; display: inline-block; position: relative; margin-top: 15px; }
+        .scan-line { position: absolute; left: 0; width: 100%; height: 2px; background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: scan 2s infinite linear; }
+        @keyframes scan { 0%, 100% { top: 10%; } 50% { top: 90%; } }
 
         /* Modals */
         .modal { position: fixed; inset: 0; background: rgba(3, 7, 18, 0.95); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(15px); }
-        .modal-content { background: var(--card-bg); padding: 2.2rem; border-radius: 28px; border: 1px solid var(--border); text-align: center; width: 300px; }
+        .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 28px; border: 1px solid var(--border); text-align: center; width: 300px; }
         
         .p-bar { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-top: 15px; overflow: hidden; }
         .p-fill { height: 100%; width: 0%; background: var(--primary); transition: width 2s linear; }
 
         .hidden { display: none; }
         .toggle-link { margin-top: 15px; font-size: 0.75rem; color: #64748b; cursor: pointer; display: block; }
-        @keyframes scan {
-        0% { top: 10%; }
-        50% { top: 90%; }
-        100% { top: 10%; }
-    }
     </style>
 </head>
 <body>
@@ -74,101 +80,67 @@
     <canvas id="bg-canvas"></canvas>
     <canvas id="enc-canvas"></canvas>
 
-    <div id="sync-modal" class="modal">
-        <div class="modal-content">
-            <div style="display: flex; justify-content: space-between; font-family: 'Fira Code'; font-size: 0.6rem; color: var(--primary); margin-bottom: 15px;">
-                <div id="sig">📶 SYNCING</div>
-                <div id="ping">24ms</div>
-            </div>
-            <div style="font-size: 2.5rem; margin-bottom: 10px;">📡</div>
-            <h3 style="letter-spacing: 2px; font-size: 1rem;">ENCRYPTING LINK</h3>
-            <p style="font-size: 0.65rem; color: #64748b; font-family: 'Fira Code';">ID: <span id="conn-id" style="color:white">---</span></p>
-            <div class="p-bar"><div class="p-fill" id="p-fill"></div></div>
-        </div>
-    </div>
-
-    <div id="otp-modal" class="modal">
-        <div class="modal-content">
-            <div style="font-size: 2.5rem;">🛡️</div>
-            <h3 style="color: var(--primary); font-size: 1.1rem;">Verification</h3>
-            <p id="otp-msg" style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 20px;"></p>
-            <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 20px;">
-                <input type="text" class="otp-i" maxlength="1" oninput="step(this)" style="width: 35px; text-align: center; font-weight: 800;">
-                <input type="text" class="otp-i" maxlength="1" oninput="step(this)" style="width: 35px; text-align: center; font-weight: 800;">
-                <input type="text" class="otp-i" maxlength="1" oninput="step(this)" style="width: 35px; text-align: center; font-weight: 800;">
-                <input type="text" class="otp-i" maxlength="1" oninput="step(this)" style="width: 35px; text-align: center; font-weight: 800;">
-            </div>
-            <button class="submit-btn" onclick="finalVerify()">Authorize Session</button>
-        </div>
-    </div>
-
-    <div id="privacy-modal" class="modal">
-        <div class="modal-content" style="text-align: left;">
-            <h3 style="color: var(--primary); margin: 0 0 10px 0;">Protocol Terms</h3>
-            <p style="font-size: 0.7rem; color: #94a3b8; line-height: 1.5;">All data routed via WhatsApp is encrypted. By registering, you agree to the automated FEX sync protocol.</p>
-            <button class="submit-btn" onclick="closeM('privacy-modal')">I AGREE</button>
-        </div>
-    </div>
-
     <div class="main-container">
         <div class="card">
-            <div class="slider-container">
-                <span style="font-size: 0.6rem; color: #64748b;">AESTHETIC</span>
-                <input type="range" class="min-slider" min="0.5" max="1" step="0.01" value="0.9" oninput="adjustUI(this.value)">
+            <div id="lockout-screen">
+                <div style="font-size: 3rem;">⚠️</div>
+                <h3 style="color: var(--danger); margin: 10px 0;">SYSTEM LOCKDOWN</h3>
+                <p style="font-size: 0.7rem; color: #94a3b8;">Multiple failed attempts detected.</p>
+                <div id="lock-timer" style="font-size: 1.5rem; font-family: 'Fira Code'; margin-top: 10px; color: white;">60s</div>
             </div>
+
+            <div class="slider-container">
+                <span style="font-size: 0.5rem; color: #64748b;">AESTHETIC</span>
+                <input type="range" class="min-slider" min="0.5" max="1" step="0.01" value="0.9" oninput="document.querySelector('.card').style.backgroundColor=`rgba(15,23,42,${this.value})`">
+            </div>
+
             <div class="logo-text">goApps</div>
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--border);">
-    <p style="font-size: 0.65rem; color: #64748b; margin-bottom: 10px;">OR SCAN TO SYNC</p>
-    <div id="qr-container" style="background: white; padding: 10px; display: inline-block; border-radius: 12px; position: relative;">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=goapps_sync_terminal_alpha" id="qr-img" style="display: block; width: 120px; height: 120px;">
-        <div id="qr-scan-line" style="position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--primary); box-shadow: 0 0 10px var(--primary); animation: scan 2s infinite linear;"></div>
-    </div>
-</div>
             
             <div id="login-v">
                 <div class="auth-option">
-    <button class="auth-header" onclick="toggleA(this)"><span>💬</span> WhatsApp</button>
-    <div class="auth-content">
-        <p style="font-size: 0.7rem; color: #64748b; margin-bottom: 10px;">Request a temporary access key from the Secure Gateway.</p>
-        <input type="text" class="l-id" placeholder="Phone ID (e.g. 234...)">
-        <input type="password" class="l-key" placeholder="Enter Received Key">
-        
-        <div style="display: flex; gap: 5px;">
-            <button class="submit-btn" style="background: #25D366; color: white;" onclick="requestAccess()">Request Key</button>
-            <button class="submit-btn" onclick="handshake(this)">Login</button>
-        </div>
-    </div>
-</div>
-
-   <div class="auth-option">
+                    <button class="auth-header" onclick="toggleA(this)"><span>💬</span> WhatsApp</button>
+                    <div class="auth-content">
+                        <input type="text" class="l-id" placeholder="Phone ID">
+                        <input type="password" class="l-key" placeholder="Key">
+                        <div style="display: flex; gap: 5px;">
+                            <button class="submit-btn" style="background: #25D366; color: white;" onclick="requestKey()">Get Key</button>
+                            <button class="submit-btn" onclick="processLogin(this)">Enter</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="auth-option">
                     <button class="auth-header" onclick="toggleA(this)"><span>✈️</span> Telegram</button>
                     <div class="auth-content">
                         <input type="text" class="l-id" placeholder="@username">
                         <input type="password" class="l-key" placeholder="Key">
-                        <button class="submit-btn" onclick="handshake(this)">Login via Telegram</button>
+                        <button class="submit-btn" onclick="processLogin(this)">Enter</button>
                     </div>
                 </div>
-                <div class="auth-option">
-                    <button class="auth-header" onclick="toggleA(this)"><span>✉️</span> Email</button>
-                    <div class="auth-content">
-                        <input type="email" class="l-id" placeholder="Email Address">
-                        <input type="password" class="l-key" placeholder="Key">
-                        <button class="submit-btn" onclick="handshake(this)">Login via Email</button>
-                    </div>
+                <div class="qr-box">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=goapps_init" id="qr-img" style="width:100px; height:100px;">
+                    <div class="scan-line"></div>
                 </div>
-                <a class="toggle-link" onclick="swapView()">New Identity? <span>Register</span></a>
+                <a class="toggle-link" onclick="swap()">New Identity? <span>Register</span></a>
             </div>
 
             <div id="reg-v" class="hidden">
-                <input type="email" id="re" placeholder="Sync Email">
+                <input type="email" id="re" placeholder="Email Address">
                 <input type="tel" id="rw" placeholder="WhatsApp Number">
-                <label style="display: flex; gap: 8px; margin: 15px 0; text-align: left;">
-                    <input type="checkbox" id="tc" onchange="checkReg()">
-                    <span style="font-size: 0.65rem; color: #64748b;">Accept <span style="color: var(--primary); text-decoration: underline; cursor: pointer;" onclick="openM('privacy-modal')">Privacy Protocol</span></span>
+                <label style="display:flex; gap:8px; margin:15px 0; font-size:0.6rem; color:#64748b; text-align:left;">
+                    <input type="checkbox" id="tc" onchange="document.getElementById('rb').disabled=!this.checked; document.getElementById('rb').style.opacity=this.checked?1:0.4;">
+                    <span>Accept <span style="color:var(--primary); text-decoration:underline; cursor:pointer;" onclick="alert('Privacy Protocol: Data is end-to-end encrypted.')">Privacy Protocol</span></span>
                 </label>
-                <button id="rb" class="submit-btn" onclick="doReg()" style="opacity:0.4" disabled>Register via WhatsApp</button>
-                <a class="toggle-link" onclick="swapView()">Back to Login</a>
+                <button id="rb" class="submit-btn" onclick="doReg()" style="opacity:0.4" disabled>Link via WhatsApp</button>
+                <a class="toggle-link" onclick="swap()">Back to Login</a>
             </div>
+        </div>
+    </div>
+
+    <div id="sync-modal" class="modal">
+        <div class="modal-content">
+            <div style="font-size: 2rem; margin-bottom: 10px;">🛰️</div>
+            <h4 id="sync-status">SYNCING LINK...</h4>
+            <div class="p-bar"><div class="p-fill" id="p-fill"></div></div>
         </div>
     </div>
 
@@ -176,123 +148,89 @@
         const DB = [
             {id: "2348157505037", k: "pass1", p: "admin"},
             {id: "@chima_pro", k: "pass2", p: "chima"},
-            {id: "student@goapps.com", k: "pass3", p: "student-hub"},
-            {id: "2349012345678", k: "pass4", p: "adebayo"},
-            {id: "@precious_dev", k: "pass5", p: "precious"}
+            {id: "student@goapps.com", k: "pass3", p: "student-hub"}
         ];
+        
+        let attempts = 0;
         let target = "";
 
-        // UI Adjuster
-        function adjustUI(v) { document.querySelector('.card').style.backgroundColor = `rgba(15, 23, 42, ${v})`; }
-
-        // Handshake & Hex
-        const ec = document.getElementById('enc-canvas');
-        const ex = ec.getContext('2d');
-        function hex() {
-            ex.clearRect(0,0,ec.width,ec.height);
-            ex.fillStyle = "rgba(56, 189, 248, 0.15)";
-            for(let i=0; i<40; i++) ex.fillText(Math.random().toString(16).substr(2,8), Math.random()*ec.width, Math.random()*ec.height);
-            if(ec.style.opacity > 0) requestAnimationFrame(hex);
+        function toggleA(e) { 
+            const p=e.parentElement; const a=p.classList.contains('active'); 
+            document.querySelectorAll('.auth-option').forEach(x=>x.classList.remove('active')); 
+            if(!a) p.classList.add('active'); 
         }
 
-        function handshake(btn) {
-            const c = btn.parentElement;
-            const u = DB.find(x => x.id === c.querySelector('.l-id').value && x.k === c.querySelector('.l-key').value);
-            if(!u) return alert("DENIED");
+        function swap() { document.getElementById('login-v').classList.toggle('hidden'); document.getElementById('reg-v').classList.toggle('hidden'); }
 
-            target = u.p;
-            const ch = btn.innerText.split('via ')[1];
-            localStorage.setItem('ch', ch);
+        function requestKey() {
+            const id = document.querySelector('.l-id').value;
+            if(!id) return alert("Enter Phone ID first.");
+            window.location.href = `https://wa.me/2348157505037?text=${encodeURIComponent("Request Login access\nUser: "+id)}`;
+        }
 
-            play(); if(navigator.vibrate) navigator.vibrate([40, 80]);
-            ec.width = window.innerWidth; ec.height = window.innerHeight; ec.style.opacity = "1"; hex();
-            
-            document.getElementById('conn-id').innerText = "GOCBT-"+Math.random().toString(36).substr(2,6).toUpperCase();
+        function processLogin(btn) {
+            const p = btn.closest('.auth-content');
+            const id = p.querySelector('.l-id').value;
+            const key = p.querySelector('.l-key').value;
+            const u = DB.find(x => x.id === id && x.k === key);
+
+            if(u) {
+                attempts = 0;
+                target = u.p;
+                startSync();
+            } else {
+                attempts++;
+                if(attempts >= 3) triggerLockout();
+                else alert(`ACCESS DENIED. Attempt ${attempts}/3`);
+            }
+        }
+
+        function triggerLockout() {
+            const screen = document.getElementById('lockout-screen');
+            const timer = document.getElementById('lock-timer');
+            screen.style.display = 'flex';
+            let sec = 60;
+            const iv = setInterval(() => {
+                sec--; timer.innerText = sec + "s";
+                if(sec <= 0) { clearInterval(iv); screen.style.display = 'none'; attempts = 0; }
+            }, 1000);
+        }
+
+        function startSync() {
             document.getElementById('sync-modal').style.display='flex';
-            
+            const f = document.getElementById('p-fill');
             let p = 0;
             const iv = setInterval(() => {
-                p += 5; document.getElementById('p-fill').style.width = p+"%";
-                document.getElementById('ping').innerText = Math.floor(Math.random()*10+10)+"ms";
+                p += 10; f.style.width = p + "%";
                 if(p >= 100) {
                     clearInterval(iv);
-                    setTimeout(() => {
-                        document.getElementById('sync-modal').style.display='none';
-                        ec.style.opacity="0";
-                        document.getElementById('otp-msg').innerHTML=`Code sent to <b>${ch}</b>`;
-                        document.getElementById('otp-modal').style.display='flex';
-                    }, 500);
+                    window.location.href = "https://goapps-official.github.io/My-Profile/" + target;
                 }
-            }, 100);
+            }, 150);
         }
 
-        // Functions
-        function swapView() { document.getElementById('login-v').classList.toggle('hidden'); document.getElementById('reg-v').classList.toggle('hidden'); }
-        function openM(id) { document.getElementById(id).style.display='flex'; }
-        function closeM(id) { document.getElementById(id).style.display='none'; }
-        function step(e) { if(e.value && e.nextElementSibling) e.nextElementSibling.focus(); }
-        function checkReg() { const b=document.getElementById('rb'); const c=document.getElementById('tc').checked; b.disabled=!c; b.style.opacity=c?1:0.4; }
-        function toggleA(e) { const p=e.parentElement; const a=p.classList.contains('active'); document.querySelectorAll('.auth-option').forEach(x=>x.classList.remove('active')); if(!a) p.classList.add('active'); }
-        
         function doReg() {
-            const e=document.getElementById('re').value; const w=document.getElementById('rw').value;
-            window.location.href=`https://wa.me/2348157505037?text=${encodeURIComponent("link goAPPs\nEmail: "+e+"\nWA: "+w)}`;
+            const e = document.getElementById('re').value;
+            const w = document.getElementById('rw').value;
+            window.location.href = `https://wa.me/2348157505037?text=${encodeURIComponent("link goAPPs\nEmail: "+e+"\nWA: "+w)}`;
         }
 
-        function finalVerify() {
-            let c = ""; document.querySelectorAll('.otp-i').forEach(x=>c+=x.value);
-            if(c==="1234") window.location.href="https://goapps-official.github.io/My-Profile/"+target;
-            else alert("RETRY");
-        }
-
-        function play() {
-            const a=new(window.AudioContext||window.webkitAudioContext)(); const o=a.createOscillator(); const g=a.createGain();
-            o.connect(g); g.connect(a.destination); o.frequency.setValueAtTime(600,a.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.01,a.currentTime+0.3); o.start(); o.stop(a.currentTime+0.3);
-        }
-
-        // Memory & BG
+        // Init Background
         window.onload = () => {
-            const l=localStorage.getItem('ch'); if(l) document.querySelectorAll('.auth-header').forEach(h=>{if(h.innerText.includes(l)) toggleA(h)});
-            const c=document.getElementById('bg-canvas'); const x=c.getContext('2d');
-            c.width=window.innerWidth; c.height=window.innerHeight; let pts=[];
-            for(let i=0;i<40;i++) pts.push({x:Math.random()*c.width, y:Math.random()*c.height, v:Math.random()*0.2});
-            function d(){
+            const c = document.getElementById('bg-canvas'); const x = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            let pts = []; for(let i=0; i<30; i++) pts.push({x:Math.random()*c.width, y:Math.random()*c.height, v:Math.random()*0.5+0.1});
+            function draw() {
                 x.clearRect(0,0,c.width,c.height); x.fillStyle="rgba(56,189,248,0.1)";
-                pts.forEach(p=>{p.y-=p.v; if(p.y<0)p.y=c.height; x.beginPath(); x.arc(p.x,p.y,1,0,7); x.fill();});
-                requestAnimationFrame(d);
-            } d();
+                pts.forEach(p => { p.y-=p.v; if(p.y<0) p.y=c.height; x.beginPath(); x.arc(p.x,p.y,1,0,7); x.fill(); });
+                requestAnimationFrame(draw);
+            } draw();
+            
+            // QR Rotation
+            setInterval(() => {
+                document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=sync_${Math.random()}`;
+            }, 10000);
         };
-        const ADMIN_PHONE = "2348157505037";
-
-// 1. WhatsApp Access Request
-function requestAccess() {
-    const phoneInput = document.querySelector('.l-id').value;
-    if(!phoneInput) {
-        alert("Please enter your Phone ID first.");
-        return;
-    }
-    
-    playTone();
-    const msg = encodeURIComponent(`Request Login access\nDevice ID: ${navigator.platform}\nUser: ${phoneInput}`);
-    
-    // Redirect to WhatsApp
-    window.location.href = `https://wa.me/${ADMIN_PHONE}?text=${msg}`;
-}
-
-// 2. Dynamic QR Rotation (Simulates security refreshes)
-function rotateQR() {
-    const qrImg = document.getElementById('qr-img');
-    setInterval(() => {
-        const token = Math.random().toString(36).substr(2, 10);
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=goapps_token_${token}`;
-        // Subtle haptic every time QR rotates
-        if(navigator.vibrate) navigator.vibrate(10);
-    }, 30000); // Rotates every 30 seconds
-}
-
-// Start QR rotation on load
-window.addEventListener('DOMContentLoaded', rotateQR);
     </script>
 </body>
 </html>
