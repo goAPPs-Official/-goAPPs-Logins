@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>goApps|🔐Secure Terminal v3</title>
+    <title>goApps | Secure Terminal v4.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #38bdf8; --secondary: #818cf8; --bg: #030712;
-            --card-bg: rgba(15, 23, 42, 0.9); --success: #2dd4bf;
+            --card-bg: rgba(15, 23, 42, 0.95); --success: #2dd4bf;
             --border: rgba(255, 255, 255, 0.1); --danger: #ef4444;
         }
 
@@ -18,61 +18,47 @@
             color: white; overflow: hidden; display: flex; justify-content: center; align-items: center;
         }
 
-        /* Background Layers */
         #bg-canvas, #enc-canvas { position: fixed; inset: 0; }
         #bg-canvas { z-index: 1; }
         #enc-canvas { z-index: 5; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
 
-        /* Main UI */
         .main-container { position: relative; z-index: 10; width: 380px; }
         .card {
-            background: var(--card-bg); backdrop-filter: blur(20px);
-            padding: 2rem; border-radius: 32px; border: 1px solid var(--border);
+            background: var(--card-bg); backdrop-filter: blur(25px);
+            padding: 2.2rem; border-radius: 32px; border: 1px solid var(--border);
             text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
-            position: relative; overflow: hidden;
+            position: relative;
         }
 
-        /* Lockout Overlay */
         #lockout-screen {
-            position: absolute; inset: 0; background: rgba(239, 68, 68, 0.1);
-            backdrop-filter: blur(10px); display: none; z-index: 50;
-            flex-direction: column; justify-content: center; align-items: center;
+            position: absolute; inset: 0; background: rgba(239, 68, 68, 0.15);
+            backdrop-filter: blur(15px); display: none; z-index: 100;
+            flex-direction: column; justify-content: center; align-items: center; border-radius: 32px;
         }
 
-        /* Slider */
-        .slider-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; justify-content: center; }
-        .min-slider { -webkit-appearance: none; width: 60px; height: 3px; background: var(--border); border-radius: 5px; outline: none; }
-        .min-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; background: var(--primary); border-radius: 50%; cursor: pointer; }
+        .logo-text { font-size: 2rem; font-weight: 800; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1.5rem; }
 
-        .logo-text { font-size: 1.8rem; font-weight: 800; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1.2rem; }
-
-        /* Accordion */
-        .auth-option { margin-bottom: 10px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); transition: 0.3s; background: rgba(255,255,255,0.02); }
-        .auth-header { width: 100%; padding: 15px; background: none; border: none; color: white; display: flex; align-items: center; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
-        .auth-header span { margin-right: 12px; font-size: 1.2rem; }
-        .auth-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; padding: 0 15px; }
+        .auth-option { margin-bottom: 12px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: 0.3s; background: rgba(255,255,255,0.02); }
+        .auth-header { width: 100%; padding: 18px; background: none; border: none; color: white; display: flex; align-items: center; cursor: pointer; font-weight: 600; font-size: 0.95rem; }
+        .auth-header span { margin-right: 15px; font-size: 1.3rem; }
+        .auth-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; padding: 0 18px; }
         .auth-option.active { border-color: var(--primary); background: rgba(56, 189, 248, 0.05); }
-        .auth-option.active .auth-content { max-height: 350px; padding-bottom: 15px; }
+        .auth-option.active .auth-content { max-height: 400px; padding-bottom: 18px; }
 
-        input { width: 100%; padding: 12px; margin: 6px 0; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 10px; color: white; outline: none; box-sizing: border-box; }
+        input { width: 100%; padding: 14px; margin: 8px 0; background: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 12px; color: white; outline: none; box-sizing: border-box; font-family: 'Inter'; }
         input:focus { border-color: var(--primary); }
         
-        .submit-btn { width: 100%; padding: 12px; background: linear-gradient(90deg, var(--primary), var(--secondary)); border: none; border-radius: 10px; color: #030712; font-weight: 800; cursor: pointer; margin-top: 8px; font-size: 0.75rem; letter-spacing: 1px; }
+        .submit-btn { width: 100%; padding: 14px; background: linear-gradient(90deg, var(--primary), var(--secondary)); border: none; border-radius: 12px; color: #030712; font-weight: 800; cursor: pointer; margin-top: 10px; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
 
-        /* QR Scanner */
-        .qr-box { background: white; padding: 10px; border-radius: 12px; display: inline-block; position: relative; margin-top: 15px; }
-        .scan-line { position: absolute; left: 0; width: 100%; height: 2px; background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: scan 2s infinite linear; }
-        @keyframes scan { 0%, 100% { top: 10%; } 50% { top: 90%; } }
-
-        /* Modals */
-        .modal { position: fixed; inset: 0; background: rgba(3, 7, 18, 0.95); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(15px); }
-        .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 28px; border: 1px solid var(--border); text-align: center; width: 300px; }
+        .modal { position: fixed; inset: 0; background: rgba(3, 7, 18, 0.98); display: none; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(20px); }
+        .modal-content { background: var(--card-bg); padding: 2.5rem; border-radius: 28px; border: 1px solid var(--border); text-align: center; width: 320px; }
         
-        .p-bar { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-top: 15px; overflow: hidden; }
-        .p-fill { height: 100%; width: 0%; background: var(--primary); transition: width 2s linear; }
+        .p-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.1); margin-top: 20px; overflow: hidden; border-radius: 5px; }
+        .p-fill { height: 100%; width: 0%; background: var(--primary); transition: width 2.5s linear; }
 
+        #success-badge { display: none; flex-direction: column; align-items: center; gap: 10px; }
         .hidden { display: none; }
-        .toggle-link { margin-top: 15px; font-size: 0.75rem; color: #64748b; cursor: pointer; display: block; }
+        .toggle-link { margin-top: 15px; font-size: 0.8rem; color: #64748b; cursor: pointer; display: block; }
     </style>
 </head>
 <body>
@@ -80,156 +66,232 @@
     <canvas id="bg-canvas"></canvas>
     <canvas id="enc-canvas"></canvas>
 
+    <div id="sync-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; font-family: 'Fira Code'; font-size: 0.7rem; color: var(--primary); margin-bottom: 20px;">
+                <div id="sig">📶 MESH: ACTIVE</div>
+                <div id="ping">LATENCY: 14ms</div>
+            </div>
+            <div style="font-size: 3.5rem; margin-bottom: 10px;">📡</div>
+            <h3 style="letter-spacing: 2px;">ESTABLISHING LINK</h3>
+            <p style="font-size: 0.7rem; color: #64748b; font-family: 'Fira Code';">Handshake ID: <span id="conn-id" style="color:white">---</span></p>
+            <div class="p-bar"><div class="p-fill" id="p-fill"></div></div>
+            <p id="status-text" style="font-size: 0.65rem; color: var(--success); margin-top: 15px; font-family: 'Fira Code';">Routing Packets...</p>
+        </div>
+    </div>
+
+    <div id="otp-modal" class="modal">
+        <div class="modal-content">
+            <div id="otp-form-content">
+                <div style="font-size: 2.5rem; margin-bottom: 15px;">🛡️</div>
+                <h3 style="color: var(--primary);">Channel Verification</h3>
+                <p id="otp-msg" style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 20px;"></p>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
+                    <input type="text" class="otp-i" maxlength="1" oninput="moveF(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
+                    <input type="text" class="otp-i" maxlength="1" oninput="moveF(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
+                    <input type="text" class="otp-i" maxlength="1" oninput="moveF(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
+                    <input type="text" class="otp-i" maxlength="1" oninput="moveF(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
+                </div>
+                <button class="submit-btn" onclick="verifyOTP()">Authorize Session</button>
+            </div>
+
+            <div id="success-badge">
+                <div style="font-size: 4rem; color: var(--success); filter: drop-shadow(0 0 10px var(--success));">✅</div>
+                <h3 style="color: var(--success); margin-top: 10px;">ACCESS GRANTED</h3>
+                <p style="font-size: 0.75rem; color: #94a3b8; font-family: 'Fira Code';">Redirecting to Terminal...</p>
+            </div>
+        </div>
+    </div>
+
     <div class="main-container">
         <div class="card">
             <div id="lockout-screen">
-                <div style="font-size: 3rem;">⚠️</div>
-                <h3 style="color: var(--danger); margin: 10px 0;">SYSTEM LOCKDOWN</h3>
-                <p style="font-size: 0.7rem; color: #94a3b8;">Multiple failed attempts detected.</p>
-                <div id="lock-timer" style="font-size: 1.5rem; font-family: 'Fira Code'; margin-top: 10px; color: white;">60s</div>
-            </div>
-
-            <div class="slider-container">
-                <span style="font-size: 0.5rem; color: #64748b;">AESTHETIC</span>
-                <input type="range" class="min-slider" min="0.5" max="1" step="0.01" value="0.9" oninput="document.querySelector('.card').style.backgroundColor=`rgba(15,23,42,${this.value})`">
+                <div style="font-size: 3rem;">🚫</div>
+                <h3 style="color: var(--danger); margin: 10px 0;">ACCESS DENIED</h3>
+                <p style="font-size: 0.75rem; color: #94a3b8;">Lockdown Active.</p>
+                <div id="lock-timer" style="font-size: 1.8rem; font-family: 'Fira Code'; margin-top: 15px; color: white;">60s</div>
             </div>
 
             <div class="logo-text">goApps</div>
             
             <div id="login-v">
                 <div class="auth-option">
-                    <button class="auth-header" onclick="toggleA(this)"><span>💬</span> WhatsApp</button>
+                    <button class="auth-header" onclick="toggleAcc(this)"><span>💬</span> WhatsApp</button>
                     <div class="auth-content">
                         <input type="text" class="l-id" placeholder="Phone ID">
-                        <input type="password" class="l-key" placeholder="Key">
-                        <div style="display: flex; gap: 5px;">
-                            <button class="submit-btn" style="background: #25D366; color: white;" onclick="requestKey()">Get Key</button>
-                            <button class="submit-btn" onclick="processLogin(this)">Enter</button>
-                        </div>
+                        <input type="password" class="l-key" placeholder="Access Key">
+                        <button class="submit-btn" onclick="handleLogin(this)">Secure Login</button>
                     </div>
                 </div>
                 <div class="auth-option">
-                    <button class="auth-header" onclick="toggleA(this)"><span>✈️</span> Telegram</button>
+                    <button class="auth-header" onclick="toggleAcc(this)"><span>✈️</span> Telegram</button>
                     <div class="auth-content">
                         <input type="text" class="l-id" placeholder="@username">
-                        <input type="password" class="l-key" placeholder="Key">
-                        <button class="submit-btn" onclick="processLogin(this)">Enter</button>
+                        <input type="password" class="l-key" placeholder="Access Key">
+                        <button class="submit-btn" onclick="handleLogin(this)">Secure Login</button>
                     </div>
                 </div>
-                <div class="qr-box">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=goapps_init" id="qr-img" style="width:100px; height:100px;">
-                    <div class="scan-line"></div>
-                </div>
-                <a class="toggle-link" onclick="swap()">New Identity? <span>Register</span></a>
+                <a class="toggle-link" onclick="swap()">New Identity? <span>Register Here</span></a>
             </div>
 
             <div id="reg-v" class="hidden">
                 <input type="email" id="re" placeholder="Email Address">
                 <input type="tel" id="rw" placeholder="WhatsApp Number">
-                <label style="display:flex; gap:8px; margin:15px 0; font-size:0.6rem; color:#64748b; text-align:left;">
-                    <input type="checkbox" id="tc" onchange="document.getElementById('rb').disabled=!this.checked; document.getElementById('rb').style.opacity=this.checked?1:0.4;">
-                    <span>Accept <span style="color:var(--primary); text-decoration:underline; cursor:pointer;" onclick="alert('Privacy Protocol: Data is end-to-end encrypted.')">Privacy Protocol</span></span>
-                </label>
-                <button id="rb" class="submit-btn" onclick="doReg()" style="opacity:0.4" disabled>Link via WhatsApp</button>
-                <a class="toggle-link" onclick="swap()">Back to Login</a>
+                <button class="submit-btn" onclick="handleRegistration()">Request WhatsApp Link</button>
+                <a class="toggle-link" onclick="swap()">Already Registered? Login</a>
             </div>
         </div>
     </div>
 
-    <div id="sync-modal" class="modal">
-        <div class="modal-content">
-            <div style="font-size: 2rem; margin-bottom: 10px;">🛰️</div>
-            <h4 id="sync-status">SYNCING LINK...</h4>
-            <div class="p-bar"><div class="p-fill" id="p-fill"></div></div>
-        </div>
-    </div>
-
     <script>
-        const DB = [
+        const USER_DB = [
             {id: "2348157505037", k: "pass1", p: "admin"},
-            {id: "@chima_pro", k: "pass2", p: "chima"},
-            {id: "student@goapps.com", k: "pass3", p: "student-hub"}
+            {id: "2349012345678", k: "pass4", p: "adebayo"}
         ];
         
-        let attempts = 0;
-        let target = "";
+        let loginAttempts = 0;
+        let pendingProfile = "";
+        let currentChannel = "";
 
-        function toggleA(e) { 
-            const p=e.parentElement; const a=p.classList.contains('active'); 
-            document.querySelectorAll('.auth-option').forEach(x=>x.classList.remove('active')); 
-            if(!a) p.classList.add('active'); 
+        function toggleAcc(btn) {
+            const parent = btn.parentElement;
+            const wasActive = parent.classList.contains('active');
+            document.querySelectorAll('.auth-option').forEach(opt => opt.classList.remove('active'));
+            if(!wasActive) parent.classList.add('active');
         }
 
-        function swap() { document.getElementById('login-v').classList.toggle('hidden'); document.getElementById('reg-v').classList.toggle('hidden'); }
-
-        function requestKey() {
-            const id = document.querySelector('.l-id').value;
-            if(!id) return alert("Enter Phone ID first.");
-            window.location.href = `https://wa.me/2348157505037?text=${encodeURIComponent("Request Login access\nUser: "+id)}`;
+        function swap() {
+            document.getElementById('login-v').classList.toggle('hidden');
+            document.getElementById('reg-v').classList.toggle('hidden');
         }
 
-        function processLogin(btn) {
-            const p = btn.closest('.auth-content');
-            const id = p.querySelector('.l-id').value;
-            const key = p.querySelector('.l-key').value;
-            const u = DB.find(x => x.id === id && x.k === key);
+        function moveF(el) { if(el.value && el.nextElementSibling) el.nextElementSibling.focus(); }
 
-            if(u) {
-                attempts = 0;
-                target = u.p;
-                startSync();
+        function handleLogin(btn) {
+            const container = btn.parentElement;
+            const id = container.querySelector('.l-id').value;
+            const key = container.querySelector('.l-key').value;
+            const user = USER_DB.find(u => u.id === id && u.k === key);
+
+            if(user) {
+                loginAttempts = 0;
+                pendingProfile = user.p;
+                currentChannel = btn.closest('.auth-option').innerText.trim();
+                localStorage.setItem('last_ch', currentChannel);
+                triggerSyncSequence();
             } else {
-                attempts++;
-                if(attempts >= 3) triggerLockout();
-                else alert(`ACCESS DENIED. Attempt ${attempts}/3`);
+                loginAttempts++;
+                if(loginAttempts >= 3) startLockout();
+                else alert(`Invalid Credentials. Attempt ${loginAttempts}/3`);
             }
         }
 
-        function triggerLockout() {
+        function triggerSyncSequence() {
+            const ec = document.getElementById('enc-canvas');
+            const ex = ec.getContext('2d');
+            ec.width = window.innerWidth; ec.height = window.innerHeight;
+            ec.style.opacity = "1";
+            
+            function drawHex() {
+                ex.clearRect(0,0,ec.width,ec.height);
+                ex.fillStyle = "rgba(56, 189, 248, 0.2)";
+                for(let i=0; i<30; i++) ex.fillText(Math.random().toString(16).substr(2,8).toUpperCase(), Math.random()*ec.width, Math.random()*ec.height);
+                if(ec.style.opacity > 0) requestAnimationFrame(drawHex);
+            }
+            drawHex();
+            playTone(440, 880); 
+            document.getElementById('conn-id').innerText = "GOCBT-" + Math.random().toString(36).substr(2,6).toUpperCase();
+            document.getElementById('sync-modal').style.display = 'flex';
+            
+            let progress = 0;
+            const fill = document.getElementById('p-fill');
+            const iv = setInterval(() => {
+                progress += 5;
+                fill.style.width = progress + "%";
+                if(progress >= 100) {
+                    clearInterval(iv);
+                    setTimeout(() => {
+                        document.getElementById('sync-modal').style.display = 'none';
+                        ec.style.opacity = "0";
+                        showOTP();
+                    }, 800);
+                }
+            }, 100);
+        }
+
+        function showOTP() {
+            document.getElementById('otp-msg').innerHTML = `A 4-digit code was sent to your <b>${currentChannel}</b>.`;
+            document.getElementById('otp-modal').style.display = 'flex';
+            document.querySelectorAll('.otp-i')[0].focus();
+        }
+
+        function verifyOTP() {
+            let code = "";
+            document.querySelectorAll('.otp-i').forEach(i => code += i.value);
+            if(code === "1234") {
+                // Hide Form, Show Success Badge
+                document.getElementById('otp-form-content').style.display = 'none';
+                document.getElementById('success-badge').style.display = 'flex';
+                
+                // Final Success Sound
+                playTone(600, 1200, 0.8);
+                if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+                setTimeout(() => {
+                    window.location.href = "https://goapps-official.github.io/My-Profile/" + pendingProfile;
+                }, 1800);
+            } else {
+                alert("Incorrect Verification Code.");
+                document.querySelectorAll('.otp-i').forEach(i => i.value = "");
+                document.querySelectorAll('.otp-i')[0].focus();
+            }
+        }
+
+        function handleRegistration() {
+            const email = document.getElementById('re').value;
+            const wa = document.getElementById('rw').value;
+            if(!email || !wa) return alert("Fill all fields.");
+            const msg = encodeURIComponent(`link goAPPs\nEmail: ${email}\nWhatsApp: ${wa}`);
+            window.location.href = `https://wa.me/2348157505037?text=${msg}`;
+        }
+
+        function startLockout() {
             const screen = document.getElementById('lockout-screen');
             const timer = document.getElementById('lock-timer');
             screen.style.display = 'flex';
-            let sec = 60;
+            let timeLeft = 60;
             const iv = setInterval(() => {
-                sec--; timer.innerText = sec + "s";
-                if(sec <= 0) { clearInterval(iv); screen.style.display = 'none'; attempts = 0; }
+                timeLeft--; timer.innerText = timeLeft + "s";
+                if(timeLeft <= 0) { clearInterval(iv); screen.style.display = 'none'; loginAttempts = 0; }
             }, 1000);
         }
 
-        function startSync() {
-            document.getElementById('sync-modal').style.display='flex';
-            const f = document.getElementById('p-fill');
-            let p = 0;
-            const iv = setInterval(() => {
-                p += 10; f.style.width = p + "%";
-                if(p >= 100) {
-                    clearInterval(iv);
-                    window.location.href = "https://goapps-official.github.io/My-Profile/" + target;
-                }
-            }, 150);
+        function playTone(startFreq, endFreq, duration = 0.5) {
+            const a = new (window.AudioContext || window.webkitAudioContext)();
+            const o = a.createOscillator(); const g = a.createGain();
+            o.connect(g); g.connect(a.destination);
+            o.frequency.setValueAtTime(startFreq, a.currentTime);
+            o.frequency.exponentialRampToValueAtTime(endFreq, a.currentTime + duration);
+            g.gain.exponentialRampToValueAtTime(0.01, a.currentTime + duration);
+            o.start(); o.stop(a.currentTime + duration);
         }
 
-        function doReg() {
-            const e = document.getElementById('re').value;
-            const w = document.getElementById('rw').value;
-            window.location.href = `https://wa.me/2348157505037?text=${encodeURIComponent("link goAPPs\nEmail: "+e+"\nWA: "+w)}`;
-        }
-
-        // Init Background
         window.onload = () => {
             const c = document.getElementById('bg-canvas'); const x = c.getContext('2d');
             c.width = window.innerWidth; c.height = window.innerHeight;
-            let pts = []; for(let i=0; i<30; i++) pts.push({x:Math.random()*c.width, y:Math.random()*c.height, v:Math.random()*0.5+0.1});
-            function draw() {
+            let pts = []; for(let i=0; i<40; i++) pts.push({x:Math.random()*c.width, y:Math.random()*c.height, v:Math.random()*0.3});
+            function d() {
                 x.clearRect(0,0,c.width,c.height); x.fillStyle="rgba(56,189,248,0.1)";
                 pts.forEach(p => { p.y-=p.v; if(p.y<0) p.y=c.height; x.beginPath(); x.arc(p.x,p.y,1,0,7); x.fill(); });
-                requestAnimationFrame(draw);
-            } draw();
-            
-            // QR Rotation
-            setInterval(() => {
-                document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=sync_${Math.random()}`;
-            }, 10000);
+                requestAnimationFrame(d);
+            } d();
+
+            const last = localStorage.getItem('last_ch');
+            if(last) {
+                document.querySelectorAll('.auth-header').forEach(h => {
+                    if(h.innerText.includes(last)) toggleAcc(h);
+                });
+            }
         };
     </script>
 </body>
