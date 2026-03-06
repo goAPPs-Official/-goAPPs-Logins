@@ -194,6 +194,46 @@
             requestAnimationFrame(draw);
         }
         init(); draw(); window.addEventListener('resize', init);
+        // --- CHANNEL MEMORY LOGIC ---
+
+// 1. Check for saved channel on Page Load
+window.addEventListener('DOMContentLoaded', () => {
+    const lastChannel = localStorage.getItem('goApps_last_channel');
+    if (lastChannel) {
+        const headers = document.querySelectorAll('.auth-header');
+        headers.forEach(header => {
+            if (header.innerText.includes(lastChannel)) {
+                toggleAccordion(header);
+                header.parentElement.style.boxShadow = "0 0 15px rgba(56, 189, 248, 0.3)";
+            }
+        });
+    }
+});
+
+function handleAuth(btn) {
+    const container = btn.parentElement;
+    const idInput = container.querySelector('.login-id').value.trim();
+    const keyInput = container.querySelector('.login-key').value;
+
+    // Determine channel name for memory
+    const channelName = btn.innerText.split('via ')[1]; 
+
+    const user = USER_DB.find(u => u.id === idInput && u.key === keyInput);
+
+    if(user) {
+        // Save the channel choice before redirecting
+        localStorage.setItem('goApps_last_channel', channelName);
+        
+        btn.innerText = "Verifying...";
+        btn.style.opacity = "0.7";
+        
+        setTimeout(() => {
+            window.location.href = `${BASE_URL}${user.profile}`;
+        }, 1200);
+    } else {
+        alert("Invalid Access Credentials for this channel.");
+    }
+}
     </script>
 </body>
 </html>
