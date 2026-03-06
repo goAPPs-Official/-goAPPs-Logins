@@ -67,6 +67,19 @@
         .toggle-link span { color: var(--primary); font-weight: 600; }
 
         .hidden { display: none; }
+        /* Styling for the pulse animation */
+    .pulse-container { position: relative; display: flex; justify-content: center; align-items: center; height: 80px; }
+    .pulse-ring {
+        position: absolute; width: 60px; height: 60px;
+        border: 2px solid var(--primary); border-radius: 50%;
+        animation: ripple 1.5s infinite ease-out;
+    }
+    @keyframes ripple {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(2.5); opacity: 0; }
+    }
+    .progress-bar-mini { width: 100%; height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 20px; overflow: hidden; }
+    .progress-fill-mini { height: 100%; width: 0%; background: var(--primary); transition: width 2s linear; }
     </style>
 </head>
 <body>
@@ -76,6 +89,39 @@
     <div class="main-container">
         <div class="card">
             <div id="otp-modal" class="modal">
+    <div class="modal-content">
+        <div style="font-size: 2.5rem; margin-bottom: 10px;">🛡️</div>
+        <h3 style="margin-bottom: 10px; color: var(--primary);">Channel Verification</h3>
+        <p id="otp-message" style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 20px;">
+            A 4-digit code has been sent to your <b>WhatsApp</b>.
+        </p>
+        
+        <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
+            <input type="text" class="otp-input" maxlength="1" oninput="moveFocus(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
+            <input type="text" class="otp-input" maxlength="1" oninput="moveFocus(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
+            <input type="text" class="otp-input" maxlength="1" oninput="moveFocus(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
+            <input type="text" class="otp-input" maxlength="1" oninput="moveFocus(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
+        </div>
+
+        <button class="submit-btn" onclick="verifyOTP()">Confirm Identity</button>
+        <p style="font-size: 0.7rem; color: #64748b; margin-top: 15px; cursor: pointer;" onclick="closeModal('otp-modal')">Cancel</p>
+    </div>
+</div>
+            <div id="otp-modal" class="modal">
+            <div id="connection-modal" class="modal">
+    <div class="modal-content" style="background: linear-gradient(180deg, var(--card-bg), #0f172a);">
+        <div class="pulse-container">
+            <div class="pulse-ring"></div>
+            <div style="font-size: 3rem; position: relative; z-index: 2;">📡</div>
+        </div>
+        <h3 style="margin: 15px 0 5px; color: var(--primary);">Connection Request Sent</h3>
+        <p style="color: #64748b; font-size: 0.8rem;">Syncing with goApps Satellite Mesh...</p>
+        
+        <div class="progress-bar-mini">
+            <div class="progress-fill-mini" id="syncProgress"></div>
+        </div>
+    </div>
+</div>
     <div class="modal-content">
         <div style="font-size: 2.5rem; margin-bottom: 10px;">🛡️</div>
         <h3 style="margin-bottom: 10px; color: var(--primary);">Channel Verification</h3>
@@ -172,23 +218,56 @@
             title.innerText = loginView.classList.contains('hidden') ? "goApps Register" : "goApps Login";
         }
 
-        function handleAuth(btn) {
-            const container = btn.parentElement;
-            const idInput = container.querySelector('.login-id').value.trim();
-            const keyInput = container.querySelector('.login-key').value;
+        let pendingRedirect = ""; // Stores the target URL during 2FA
+const CORRECT_OTP = "1234"; // Demo OTP for all users
 
-            const user = USER_DB.find(u => u.id === idInput && u.key === keyInput);
+function handleAuth(btn) {
+    const container = btn.parentElement;
+    const idInput = container.querySelector('.login-id').value.trim();
+    const keyInput = container.querySelector('.login-key').value;
+    const channelName = btn.innerText.split('via ')[1];
 
-            if(user) {
-                btn.innerText = "Verifying...";
-                btn.style.opacity = "0.7";
-                setTimeout(() => {
-                    window.location.href = `${BASE_URL}${user.profile}`;
-                }, 1200);
-            } else {
-                alert("Invalid Access Credentials for this channel.");
-            }
-        }
+    const user = USER_DB.find(u => u.id === idInput && u.key === keyInput);
+
+    if(user) {
+        localStorage.setItem('goApps_last_channel', channelName);
+        pendingRedirect = `${BASE_URL}${user.profile}`; // Store target
+        
+        // Show 2FA Modal
+        document.getElementById('otp-message').innerHTML = `A 4-digit code has been sent to your <b>${channelName}</b> account.`;
+        openModal('otp-modal');
+        
+        // Auto-focus first input
+        setTimeout(() => document.querySelectorAll('.otp-input')[0].focus(), 500);
+    } else {
+        alert("Invalid Access Credentials.");
+    }
+}
+
+function moveFocus(el) {
+    if (el.value.length === 1 && el.nextElementSibling) {
+        el.nextElementSibling.focus();
+    }
+}
+
+function verifyOTP() {
+    const inputs = document.querySelectorAll('.otp-input');
+    let enteredCode = "";
+    inputs.forEach(input => enteredCode += input.value);
+
+    if (enteredCode === CORRECT_OTP) {
+        const modalContent = document.querySelector('#otp-modal .modal-content');
+        modalContent.innerHTML = `<div style="font-size: 3rem; color: var(--success);">✓</div><h3 style="color: var(--success);">Identity Verified</h3>`;
+        
+        setTimeout(() => {
+            window.location.href = pendingRedirect;
+        }, 1500);
+    } else {
+        alert("Incorrect Code. Please check your " + localStorage.getItem('goApps_last_channel'));
+        inputs.forEach(input => input.value = "");
+        inputs[0].focus();
+    }
+}
 
         function handleReg() {
             alert("Registration request sent to System Administrator via FEX protocol.");
