@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>goApps | Secure Terminal v4.1</title>
+    <title>goApps | Secure Terminal v4.2</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -45,6 +45,12 @@
         .auth-option.active { border-color: var(--primary); background: rgba(56, 189, 248, 0.05); }
         .auth-option.active .auth-content { max-height: 400px; padding-bottom: 18px; }
 
+        /* QR Scanner Section */
+        .qr-section { margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border); }
+        .qr-box { background: white; padding: 10px; border-radius: 12px; display: inline-block; position: relative; }
+        .scan-line { position: absolute; left: 0; width: 100%; height: 2px; background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: scan 2s infinite linear; }
+        @keyframes scan { 0%, 100% { top: 10%; } 50% { top: 90%; } }
+
         input { width: 100%; padding: 14px; margin: 8px 0; background: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 12px; color: white; outline: none; box-sizing: border-box; font-family: 'Inter'; }
         input:focus { border-color: var(--primary); }
         
@@ -70,13 +76,12 @@
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; font-family: 'Fira Code'; font-size: 0.7rem; color: var(--primary); margin-bottom: 20px;">
                 <div id="sig">📶 MESH: ACTIVE</div>
-                <div id="ping">LATENCY: 14ms</div>
+                <div id="ping">LATENCY: 12ms</div>
             </div>
             <div style="font-size: 3.5rem; margin-bottom: 10px;">📡</div>
             <h3 style="letter-spacing: 2px;">ESTABLISHING LINK</h3>
             <p style="font-size: 0.7rem; color: #64748b; font-family: 'Fira Code';">Handshake ID: <span id="conn-id" style="color:white">---</span></p>
             <div class="p-bar"><div class="p-fill" id="p-fill"></div></div>
-            <p id="status-text" style="font-size: 0.65rem; color: var(--success); margin-top: 15px; font-family: 'Fira Code';">Routing Packets...</p>
         </div>
     </div>
 
@@ -131,6 +136,15 @@
                         <button class="submit-btn" onclick="handleLogin(this)">Secure Login</button>
                     </div>
                 </div>
+                
+                <div class="qr-section">
+                    <p style="font-size: 0.65rem; color: #64748b; margin-bottom: 10px;">SYNC VIA QR</p>
+                    <div class="qr-box">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=goapps_secure_sync" id="qr-img" style="width:100px; height:100px;">
+                        <div class="scan-line"></div>
+                    </div>
+                </div>
+
                 <a class="toggle-link" onclick="swap()">New Identity? <span>Register Here</span></a>
             </div>
 
@@ -177,7 +191,6 @@
                 loginAttempts = 0;
                 pendingProfile = user.p;
                 currentChannel = btn.closest('.auth-option').innerText.trim();
-                localStorage.setItem('last_ch', currentChannel);
                 triggerSyncSequence();
             } else {
                 loginAttempts++;
@@ -229,15 +242,12 @@
             let code = "";
             document.querySelectorAll('.otp-i').forEach(i => code += i.value);
             if(code === "1234") {
-                // Hide Form, Show Success Badge
                 document.getElementById('otp-form-content').style.display = 'none';
                 document.getElementById('success-badge').style.display = 'flex';
-                
-                // Final Success Sound
                 playTone(600, 1200, 0.8);
-                if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
-
+                
                 setTimeout(() => {
+                    // NEW REDIRECT TARGET
                     window.location.href = "https://goapps-official.github.io/My-Profile/" + pendingProfile;
                 }, 1800);
             } else {
@@ -267,13 +277,15 @@
         }
 
         function playTone(startFreq, endFreq, duration = 0.5) {
-            const a = new (window.AudioContext || window.webkitAudioContext)();
-            const o = a.createOscillator(); const g = a.createGain();
-            o.connect(g); g.connect(a.destination);
-            o.frequency.setValueAtTime(startFreq, a.currentTime);
-            o.frequency.exponentialRampToValueAtTime(endFreq, a.currentTime + duration);
-            g.gain.exponentialRampToValueAtTime(0.01, a.currentTime + duration);
-            o.start(); o.stop(a.currentTime + duration);
+            try {
+                const a = new (window.AudioContext || window.webkitAudioContext)();
+                const o = a.createOscillator(); const g = a.createGain();
+                o.connect(g); g.connect(a.destination);
+                o.frequency.setValueAtTime(startFreq, a.currentTime);
+                o.frequency.exponentialRampToValueAtTime(endFreq, a.currentTime + duration);
+                g.gain.exponentialRampToValueAtTime(0.01, a.currentTime + duration);
+                o.start(); o.stop(a.currentTime + duration);
+            } catch(e) {}
         }
 
         window.onload = () => {
@@ -286,12 +298,10 @@
                 requestAnimationFrame(d);
             } d();
 
-            const last = localStorage.getItem('last_ch');
-            if(last) {
-                document.querySelectorAll('.auth-header').forEach(h => {
-                    if(h.innerText.includes(last)) toggleAcc(h);
-                });
-            }
+            // QR Token Rotation
+            setInterval(() => {
+                document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=sync_token_${Math.random().toString(36).substr(7)}`;
+            }, 15000);
         };
     </script>
 </body>
