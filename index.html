@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>goApps | Multi-Channel Access</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>goApps | Secure Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #38bdf8;
             --secondary: #818cf8;
             --bg: #030712;
-            --card-bg: rgba(15, 23, 42, 0.9);
+            --card-bg: rgba(15, 23, 42, 0.95);
             --success: #2dd4bf;
             --border: rgba(255, 255, 255, 0.1);
         }
@@ -21,175 +21,121 @@
             color: white; overflow: hidden; display: flex; justify-content: center; align-items: center;
         }
 
+        /* Background Layers */
         #bg-canvas { position: fixed; inset: 0; z-index: 1; }
+        #enc-canvas { position: fixed; inset: 0; z-index: 5; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
 
-        /* --- UI CONTAINER --- */
+        /* Main UI */
         .main-container { position: relative; z-index: 10; width: 380px; }
         .card {
-            background: var(--card-bg); backdrop-filter: blur(20px);
-            padding: 2rem; border-radius: 28px; border: 1px solid var(--border);
-            text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background: var(--card-bg); backdrop-filter: blur(25px);
+            padding: 2.2rem; border-radius: 32px; border: 1px solid var(--border);
+            text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
         }
 
-        .logo-text { font-size: 1.8rem; font-weight: 800; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1.5rem; }
+        .logo-text { font-size: 2rem; font-weight: 800; background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1.5rem; letter-spacing: -1px; }
 
-        /* --- ACCORDION SYSTEM --- */
-        .auth-option { margin-bottom: 10px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); transition: 0.3s; }
-        .auth-header { 
-            width: 100%; padding: 15px; background: rgba(255,255,255,0.05); 
-            border: none; color: white; display: flex; align-items: center; 
-            cursor: pointer; font-weight: 600; font-size: 0.9rem;
-        }
-        .auth-header span { margin-right: 12px; font-size: 1.2rem; }
-        .auth-header:hover { background: rgba(255,255,255,0.1); }
-        
-        .auth-content { 
-            max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; 
-            background: rgba(0,0,0,0.2); padding: 0 15px;
-        }
-        .auth-option.active { border-color: var(--primary); }
-        .auth-option.active .auth-content { max-height: 250px; padding: 15px; }
+        /* Accordion Style */
+        .auth-option { margin-bottom: 12px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: rgba(255,255,255,0.02); }
+        .auth-header { width: 100%; padding: 18px; background: none; border: none; color: white; display: flex; align-items: center; cursor: pointer; font-weight: 600; font-size: 0.95rem; }
+        .auth-header span { margin-right: 15px; font-size: 1.3rem; }
+        .auth-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; padding: 0 18px; }
+        .auth-option.active { border-color: var(--primary); background: rgba(56, 189, 248, 0.05); transform: scale(1.02); }
+        .auth-option.active .auth-content { max-height: 250px; padding-bottom: 18px; }
 
-        input { 
-            width: 100%; padding: 12px; margin: 8px 0; 
-            background: rgba(0,0,0,0.4); border: 1px solid var(--border); 
-            border-radius: 10px; color: white; outline: none; 
-        }
+        input { width: 100%; padding: 14px; margin: 8px 0; background: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 12px; color: white; outline: none; font-family: 'Inter', sans-serif; }
         input:focus { border-color: var(--primary); }
+        
+        .submit-btn { width: 100%; padding: 14px; background: linear-gradient(90deg, var(--primary), var(--secondary)); border: none; border-radius: 12px; color: #030712; font-weight: 800; cursor: pointer; margin-top: 10px; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
 
-        .submit-btn { 
-            width: 100%; padding: 12px; background: linear-gradient(90deg, var(--primary), var(--secondary)); 
-            border: none; border-radius: 10px; color: #030712; font-weight: 700; 
-            cursor: pointer; margin-top: 10px;
-        }
+        /* Modals */
+        .modal { position: fixed; inset: 0; background: rgba(3, 7, 18, 0.9); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(12px); }
+        .modal-content { background: var(--card-bg); padding: 2.5rem; border-radius: 28px; border: 1px solid var(--border); text-align: center; width: 300px; }
 
-        .toggle-link { margin-top: 20px; font-size: 0.8rem; color: #64748b; cursor: pointer; display: block; }
-        .toggle-link span { color: var(--primary); font-weight: 600; }
+        /* Signal Meter */
+        .signal-meter { display: flex; gap: 3px; align-items: flex-end; height: 15px; }
+        .signal-bar { width: 4px; background: var(--primary); border-radius: 1px; opacity: 0.3; }
+        .signal-active { opacity: 1; }
+
+        /* Progress Bar */
+        .p-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.1); border-radius: 5px; margin-top: 20px; overflow: hidden; }
+        .p-fill { height: 100%; width: 0%; background: var(--primary); transition: width 2.2s linear; }
 
         .hidden { display: none; }
-        /* Styling for the pulse animation */
-    .pulse-container { position: relative; display: flex; justify-content: center; align-items: center; height: 80px; }
-    .pulse-ring {
-        position: absolute; width: 60px; height: 60px;
-        border: 2px solid var(--primary); border-radius: 50%;
-        animation: ripple 1.5s infinite ease-out;
-    }
-    @keyframes ripple {
-        0% { transform: scale(1); opacity: 1; }
-        100% { transform: scale(2.5); opacity: 0; }
-    }
-    .progress-bar-mini { width: 100%; height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 20px; overflow: hidden; }
-    .progress-fill-mini { height: 100%; width: 0%; background: var(--primary); transition: width 2s linear; }
     </style>
 </head>
 <body>
 
     <canvas id="bg-canvas"></canvas>
+    <canvas id="enc-canvas"></canvas>
+
+    <div id="sync-modal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; font-family: 'Fira Code'; font-size: 0.65rem; color: var(--primary); margin-bottom: 20px;">
+                <div class="signal-meter">
+                    <div class="signal-bar signal-active" style="height: 40%"></div>
+                    <div class="signal-bar signal-active" style="height: 70%"></div>
+                    <div class="signal-bar signal-active" style="height: 100%; animation: pulse 1s infinite"></div>
+                </div>
+                <div id="ping-val">PING: 22ms</div>
+            </div>
+            <div style="font-size: 3rem;">🛰️</div>
+            <h3 style="margin: 15px 0 5px; letter-spacing: 2px;">SYNCING LINK</h3>
+            <p style="font-size: 0.7rem; color: #64748b; font-family: 'Fira Code';">ID: <span id="conn-id" style="color:white">---</span></p>
+            <div class="p-bar"><div class="p-fill" id="p-fill"></div></div>
+            <p id="log-text" style="font-size: 0.6rem; color: var(--success); margin-top: 10px; font-family: 'Fira Code';">Initializing Handshake...</p>
+        </div>
+    </div>
+
+    <div id="otp-modal" class="modal">
+        <div class="modal-content">
+            <div style="font-size: 2.5rem;">🛡️</div>
+            <h3 style="color: var(--primary);">2FA Verification</h3>
+            <p id="otp-msg" style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 20px;"></p>
+            <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 20px;">
+                <input type="text" class="otp-i" maxlength="1" oninput="moveF(this)" style="width: 40px; text-align: center; font-weight: 800;">
+                <input type="text" class="otp-i" maxlength="1" oninput="moveF(this)" style="width: 40px; text-align: center; font-weight: 800;">
+                <input type="text" class="otp-i" maxlength="1" oninput="moveF(this)" style="width: 40px; text-align: center; font-weight: 800;">
+                <input type="text" class="otp-i" maxlength="1" oninput="moveF(this)" style="width: 40px; text-align: center; font-weight: 800;">
+            </div>
+            <button class="submit-btn" onclick="verifyFinal()">Finalize Access</button>
+        </div>
+    </div>
 
     <div class="main-container">
         <div class="card">
-            <div id="otp-modal" class="modal">
-    <div class="modal-content">
-        <div style="font-size: 2.5rem; margin-bottom: 10px;">🛡️</div>
-        <h3 style="margin-bottom: 10px; color: var(--primary);">Channel Verification</h3>
-        <p id="otp-message" style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 20px;">
-            A 4-digit code has been sent to your <b>WhatsApp</b>.
-        </p>
-        
-        <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
-            <input type="text" class="otp-input" maxlength="1" oninput="moveFocus(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
-            <input type="text" class="otp-input" maxlength="1" oninput="moveFocus(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
-            <input type="text" class="otp-input" maxlength="1" oninput="moveFocus(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
-            <input type="text" class="otp-input" maxlength="1" oninput="moveFocus(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
-        </div>
-
-        <button class="submit-btn" onclick="verifyOTP()">Confirm Identity</button>
-        <p style="font-size: 0.7rem; color: #64748b; margin-top: 15px; cursor: pointer;" onclick="closeModal('otp-modal')">Cancel</p>
-    </div>
-</div>
-            <div id="otp-modal" class="modal">
-            <div id="connection-modal" class="modal">
-    <div class="modal-content" style="background: linear-gradient(180deg, var(--card-bg), #0f172a);">
-        <div class="pulse-container">
-            <div class="pulse-ring"></div>
-            <div style="font-size: 3rem; position: relative; z-index: 2;">📡</div>
-        </div>
-        <h3 style="margin: 15px 0 5px; color: var(--primary);">Connection Request Sent</h3>
-        <p style="color: #64748b; font-size: 0.8rem;">Syncing with goApps Satellite Mesh...</p>
-        
-        <div class="progress-bar-mini">
-            <div class="progress-fill-mini" id="syncProgress"></div>
-        </div>
-    </div>
-</div>
-    <div class="modal-content">
-        <div style="font-size: 2.5rem; margin-bottom: 10px;">🛡️</div>
-        <h3 style="margin-bottom: 10px; color: var(--primary);">Channel Verification</h3>
-        <p id="otp-message" style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 20px;">
-            A 4-digit code has been sent to your <b>WhatsApp</b>.
-        </p>
-        
-        <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
-            <input type="text" class="otp-input" maxlength="1" oninput="moveFocus(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
-            <input type="text" class="otp-input" maxlength="1" oninput="moveFocus(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
-            <input type="text" class="otp-input" maxlength="1" oninput="moveFocus(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
-            <input type="text" class="otp-input" maxlength="1" oninput="moveFocus(this)" style="width: 45px; text-align: center; font-size: 1.2rem; font-weight: 800;">
-        </div>
-
-        <button class="submit-btn" onclick="verifyOTP()">Confirm Identity</button>
-        <p style="font-size: 0.7rem; color: #64748b; margin-top: 15px; cursor: pointer;" onclick="closeModal('otp-modal')">Cancel</p>
-    </div>
-</div>
-            <div class="logo-text" id="view-title">goApps Login</div>
-
-            <div id="login-view">
+            <div class="logo-text">goApps Terminal</div>
+            
+            <div id="login-accordion">
                 <div class="auth-option">
-                    <button class="auth-header" onclick="toggleAccordion(this)"><span>💬</span> WhatsApp Access</button>
+                    <button class="auth-header" onclick="toggleAcc(this)"><span>💬</span> WhatsApp</button>
                     <div class="auth-content">
-                        <input type="text" class="login-id" placeholder="Phone Number (e.g. 234...)">
-                        <input type="password" class="login-key" placeholder="Access Key">
-                        <button class="submit-btn" onclick="handleAuth(this)">Unlock via WhatsApp</button>
+                        <input type="text" class="l-id" placeholder="Phone Number">
+                        <input type="password" class="l-key" placeholder="Access Key">
+                        <button class="submit-btn" onclick="startHandshake(this)">Connect via WhatsApp</button>
                     </div>
                 </div>
-
                 <div class="auth-option">
-                    <button class="auth-header" onclick="toggleAccordion(this)"><span>✈️</span> Telegram Access</button>
+                    <button class="auth-header" onclick="toggleAcc(this)"><span>✈️</span> Telegram</button>
                     <div class="auth-content">
-                        <input type="text" class="login-id" placeholder="@username">
-                        <input type="password" class="login-key" placeholder="Access Key">
-                        <button class="submit-btn" onclick="handleAuth(this)">Unlock via Telegram</button>
+                        <input type="text" class="l-id" placeholder="@username">
+                        <input type="password" class="l-key" placeholder="Access Key">
+                        <button class="submit-btn" onclick="startHandshake(this)">Connect via Telegram</button>
                     </div>
                 </div>
-
                 <div class="auth-option">
-                    <button class="auth-header" onclick="toggleAccordion(this)"><span>✉️</span> Email Access</button>
+                    <button class="auth-header" onclick="toggleAcc(this)"><span>✉️</span> Email</button>
                     <div class="auth-content">
-                        <input type="email" class="login-id" placeholder="email@address.com">
-                        <input type="password" class="login-key" placeholder="Access Key">
-                        <button class="submit-btn" onclick="handleAuth(this)">Unlock via Email</button>
+                        <input type="email" class="l-id" placeholder="email@address.com">
+                        <input type="password" class="l-key" placeholder="Access Key">
+                        <button class="submit-btn" onclick="startHandshake(this)">Connect via Email</button>
                     </div>
                 </div>
-                
-                <a class="toggle-link" onclick="toggleView()">New Identity? <span>Register Account</span></a>
-            </div>
-
-            <div id="signup-view" class="hidden">
-                <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 15px;">Choose your primary sync channel:</p>
-                <div class="auth-option">
-                    <button class="auth-header" onclick="toggleAccordion(this)"><span>💬</span> WhatsApp Sync</button>
-                    <div class="auth-content">
-                        <input type="text" placeholder="Full Name">
-                        <input type="text" placeholder="Phone Number">
-                        <button class="submit-btn" onclick="handleReg()">Register Channel</button>
-                    </div>
-                </div>
-                <a class="toggle-link" onclick="toggleView()">Existing Identity? <span>Back to Login</span></a>
             </div>
         </div>
     </div>
 
     <script>
-        // --- DEMO USER DATABASE ---
         const USER_DB = [
             { id: "2348157505037", key: "pass1", profile: "admin" },
             { id: "@chima_pro", key: "pass2", profile: "chima" },
@@ -198,186 +144,136 @@
             { id: "@precious_dev", key: "pass5", profile: "precious" }
         ];
 
-        const BASE_URL = "https://goapps-official.github.io/My-Profile/";
+        let targetProfile = "";
 
-        function toggleAccordion(element) {
-            const parent = element.parentElement;
-            const isActive = parent.classList.contains('active');
+        // --- ENCRYPTION TUNNEL (HEX CANVAS) ---
+        const encCanvas = document.getElementById('enc-canvas');
+        const encCtx = encCanvas.getContext('2d');
+        function drawHex() {
+            encCtx.clearRect(0,0,encCanvas.width,encCanvas.height);
+            encCtx.fillStyle = "rgba(56, 189, 248, 0.15)";
+            encCtx.font = "10px Fira Code";
+            for(let i=0; i<50; i++) {
+                const txt = Math.random().toString(16).substring(2, 10).toUpperCase();
+                encCtx.fillText(txt, Math.random()*encCanvas.width, Math.random()*encCanvas.height);
+            }
+            if(encCanvas.style.opacity > 0) requestAnimationFrame(drawHex);
+        }
+
+        // --- HANDSHAKE LOGIC ---
+        function startHandshake(btn) {
+            const container = btn.parentElement;
+            const id = container.querySelector('.l-id').value;
+            const key = container.querySelector('.l-key').value;
+            const user = USER_DB.find(u => u.id === id && u.key === key);
+
+            if(!user) return alert("ACCESS DENIED: Credentials not found.");
+
+            targetProfile = user.profile;
+            const channel = btn.innerText.split('via ')[1];
+            localStorage.setItem('last_ch', channel);
+
+            // Trigger Sensory Feedback
+            if(navigator.vibrate) navigator.vibrate([40, 80, 40]);
+            playTone();
+
+            // Show Hex Tunnel
+            encCanvas.width = window.innerWidth; encCanvas.height = window.innerHeight;
+            encCanvas.style.opacity = "1";
+            drawHex();
+
+            // Show Sync Modal
+            document.getElementById('conn-id').innerText = "GOCBT-" + Math.random().toString(36).substring(2,8).toUpperCase();
+            document.getElementById('sync-modal').style.display = 'flex';
             
-            document.querySelectorAll('.auth-option').forEach(opt => opt.classList.remove('active'));
-            if (!isActive) parent.classList.add('active');
+            let prog = 0;
+            const logs = ["Building Tunnel...", "Mesh Pairing...", "Link Verified"];
+            const pFill = document.getElementById('p-fill');
+            const logTxt = document.getElementById('log-text');
+
+            const interval = setInterval(() => {
+                prog += 33.4;
+                pFill.style.width = prog + "%";
+                logTxt.innerText = logs[Math.floor(prog/34)];
+                document.getElementById('ping-val').innerText = `PING: ${Math.floor(Math.random()*10+15)}ms`;
+                
+                if(prog >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.getElementById('sync-modal').style.display = 'none';
+                        encCanvas.style.opacity = "0";
+                        showOTP(channel);
+                    }, 800);
+                }
+            }, 700);
         }
 
-        function toggleView() {
-            const loginView = document.getElementById('login-view');
-            const signupView = document.getElementById('signup-view');
-            const title = document.getElementById('view-title');
-            
-            loginView.classList.toggle('hidden');
-            signupView.classList.toggle('hidden');
-            title.innerText = loginView.classList.contains('hidden') ? "goApps Register" : "goApps Login";
+        function showOTP(ch) {
+            document.getElementById('otp-msg').innerHTML = `Routed secure code to your <b>${ch}</b>.`;
+            document.getElementById('otp-modal').style.display = 'flex';
+            document.querySelectorAll('.otp-i')[0].focus();
         }
 
-        let pendingRedirect = ""; // Stores the target URL during 2FA
-const CORRECT_OTP = "1234"; // Demo OTP for all users
-
-function handleAuth(btn) {
-    const container = btn.parentElement;
-    const idInput = container.querySelector('.login-id').value.trim();
-    const keyInput = container.querySelector('.login-key').value;
-    const channelName = btn.innerText.split('via ')[1];
-
-    const user = USER_DB.find(u => u.id === idInput && u.key === keyInput);
-
-    if(user) {
-        localStorage.setItem('goApps_last_channel', channelName);
-        pendingRedirect = `${BASE_URL}${user.profile}`; // Store target
-        
-        // Show 2FA Modal
-        document.getElementById('otp-message').innerHTML = `A 4-digit code has been sent to your <b>${channelName}</b> account.`;
-        openModal('otp-modal');
-        
-        // Auto-focus first input
-        setTimeout(() => document.querySelectorAll('.otp-input')[0].focus(), 500);
-    } else {
-        alert("Invalid Access Credentials.");
-    }
-}
-
-function moveFocus(el) {
-    if (el.value.length === 1 && el.nextElementSibling) {
-        el.nextElementSibling.focus();
-    }
-}
-
-function verifyOTP() {
-    const inputs = document.querySelectorAll('.otp-input');
-    let enteredCode = "";
-    inputs.forEach(input => enteredCode += input.value);
-
-    if (enteredCode === CORRECT_OTP) {
-        const modalContent = document.querySelector('#otp-modal .modal-content');
-        modalContent.innerHTML = `<div style="font-size: 3rem; color: var(--success);">✓</div><h3 style="color: var(--success);">Identity Verified</h3>`;
-        
-        setTimeout(() => {
-            window.location.href = pendingRedirect;
-        }, 1500);
-    } else {
-        alert("Incorrect Code. Please check your " + localStorage.getItem('goApps_last_channel'));
-        inputs.forEach(input => input.value = "");
-        inputs[0].focus();
-    }
-}
-
-        function handleReg() {
-            alert("Registration request sent to System Administrator via FEX protocol.");
+        function verifyFinal() {
+            let code = "";
+            document.querySelectorAll('.otp-i').forEach(i => code += i.value);
+            if(code === "1234") {
+                window.location.href = "https://goapps-official.github.io/My-Profile/" + targetProfile;
+            } else {
+                alert("INVALID CODE");
+            }
         }
 
-        // --- BACKGROUND CANVAS LOGIC (UNCHANGED) ---
+        // --- UTILS ---
+        function toggleAcc(el) {
+            const p = el.parentElement;
+            const wasActive = p.classList.contains('active');
+            document.querySelectorAll('.auth-option').forEach(o => o.classList.remove('active'));
+            if(!wasActive) p.classList.add('active');
+        }
+
+        function moveF(el) { if(el.value && el.nextElementSibling) el.nextElementSibling.focus(); }
+
+        function playTone() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            osc.connect(g); g.connect(ctx.destination);
+            osc.frequency.setValueAtTime(500, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.2);
+            g.gain.setValueAtTime(0.1, ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+            osc.start(); osc.stop(ctx.currentTime + 0.2);
+        }
+
+        // Channel Memory
+        window.onload = () => {
+            const last = localStorage.getItem('last_ch');
+            if(last) {
+                const headers = document.querySelectorAll('.auth-header');
+                headers.forEach(h => { if(h.innerText.includes(last)) toggleAcc(h); });
+            }
+        };
+
+        // Static Background
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
-        let particles = [];
+        let pts = [];
         function init() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            particles = [];
-            for(let i=0; i<60; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3 });
+            pts = [];
+            for(let i=0; i<50; i++) pts.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: Math.random()-0.5, vy: Math.random()-0.5});
         }
         function draw() {
-            ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(56, 189, 248, 0.2)";
-            particles.forEach(p => {
-                p.x += p.vx; p.y += p.vy;
+            ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(56, 189, 248, 0.1)";
+            pts.forEach(p => {
+                p.x += p.vx*0.2; p.y += p.vy*0.2;
                 if(p.x<0||p.x>canvas.width) p.vx*=-1; if(p.y<0||p.y>canvas.height) p.vy*=-1;
                 ctx.beginPath(); ctx.arc(p.x, p.y, 1, 0, Math.PI*2); ctx.fill();
             });
             requestAnimationFrame(draw);
         }
-        init(); draw(); window.addEventListener('resize', init);
-        // --- CHANNEL MEMORY LOGIC ---
-
-// 1. Check for saved channel on Page Load
-window.addEventListener('DOMContentLoaded', () => {
-    const lastChannel = localStorage.getItem('goApps_last_channel');
-    if (lastChannel) {
-        const headers = document.querySelectorAll('.auth-header');
-        headers.forEach(header => {
-            if (header.innerText.includes(lastChannel)) {
-                toggleAccordion(header);
-                header.parentElement.style.boxShadow = "0 0 15px rgba(56, 189, 248, 0.3)";
-            }
-        });
-    }
-});
-
-let pendingRedirect = ""; // Stores the target URL during 2FA
-const CORRECT_OTP = "1234"; // Demo OTP for all users
-
-function handleAuth(btn) {
-    const container = btn.parentElement;
-    const idInput = container.querySelector('.login-id').value.trim();
-    const keyInput = container.querySelector('.login-key').value;
-    const channelName = btn.innerText.split('via ')[1];
-
-    const user = USER_DB.find(u => u.id === idInput && u.key === keyInput);
-
-    if(user) {
-        localStorage.setItem('goApps_last_channel', channelName);
-        pendingRedirect = `${BASE_URL}${user.profile}`; // Store target
-        
-        // Show 2FA Modal
-        document.getElementById('otp-message').innerHTML = `A 4-digit code has been sent to your <b>${channelName}</b> account.`;
-        openModal('otp-modal');
-        
-        // Auto-focus first input
-        setTimeout(() => document.querySelectorAll('.otp-input')[0].focus(), 500);
-    } else {
-        alert("Invalid Access Credentials.");
-    }
-}
-
-function moveFocus(el) {
-    if (el.value.length === 1 && el.nextElementSibling) {
-        el.nextElementSibling.focus();
-    }
-}
-
-function verifyOTP() {
-    const inputs = document.querySelectorAll('.otp-input');
-    let enteredCode = "";
-    inputs.forEach(input => enteredCode += input.value);
-
-    if (enteredCode === CORRECT_OTP) {
-        const modalContent = document.querySelector('#otp-modal .modal-content');
-        modalContent.innerHTML = `<div style="font-size: 3rem; color: var(--success);">✓</div><h3 style="color: var(--success);">Identity Verified</h3>`;
-        
-        setTimeout(() => {
-            window.location.href = pendingRedirect;
-        }, 1500);
-    } else {
-        alert("Incorrect Code. Please check your " + localStorage.getItem('goApps_last_channel'));
-        inputs.forEach(input => input.value = "");
-        inputs[0].focus();
-    }
-}
-
-    // Determine channel name for memory
-    const channelName = btn.innerText.split('via ')[1]; 
-
-    const user = USER_DB.find(u => u.id === idInput && u.key === keyInput);
-
-    if(user) {
-        // Save the channel choice before redirecting
-        localStorage.setItem('goApps_last_channel', channelName);
-        
-        btn.innerText = "Verifying...";
-        btn.style.opacity = "0.7";
-        
-        setTimeout(() => {
-            window.location.href = `${BASE_URL}${user.profile}`;
-        }, 1200);
-    } else {
-        alert("Invalid Access Credentials for this channel.");
-    }
-}
+        init(); draw(); window.onresize = init;
     </script>
 </body>
 </html>
