@@ -233,7 +233,7 @@
         }
 
         function showOTP() {
-            document.getElementById('otp-msg').innerHTML = `A 4-digit code was sent to your <b>${currentChannel} or WhatsApp Login to +2348157505037</b>.`;
+            document.getElementById('otp-msg').innerHTML = `WhatsApp OTP Login to +2348157505037 to get OTP <b>${currentChannel} </b>.`;
             document.getElementById('otp-modal').style.display = 'flex';
             document.querySelectorAll('.otp-i')[0].focus();
         }
@@ -241,7 +241,7 @@
         function verifyOTP() {
             let code = "";
             document.querySelectorAll('.otp-i').forEach(i => code += i.value);
-            if(code === "1234") {
+            if(code === "1234" ) {
                 document.getElementById('otp-form-content').style.display = 'none';
                 document.getElementById('success-badge').style.display = 'flex';
                 playTone(600, 1200, 0.8);
@@ -251,7 +251,7 @@
                     window.location.href = "https://goapps-official.github.io/My-Profile/" + pendingProfile;
                 }, 1800);
             } else {
-                alert("Incorrect Verification Code.");
+                alert("Incorrect Verification Code,try again.");
                 document.querySelectorAll('.otp-i').forEach(i => i.value = "");
                 document.querySelectorAll('.otp-i')[0].focus();
             }
